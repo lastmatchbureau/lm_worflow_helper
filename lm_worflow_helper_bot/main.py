@@ -1,7 +1,7 @@
 import pathlib
 from lm_worflow_helper_bot import codecs, ics, bot, datetime, os
 import pytz
-utc=pytz.UTC
+utc=pytz.timezone('Europe/Moscow')
 
 
 def event_in_7_days_from_now(event: ics.Event):
@@ -12,7 +12,7 @@ def event_in_7_days_from_now(event: ics.Event):
 
 
 def parse_event(event: ics.Event):
-    return f"* {event.begin.datetime.strftime('%d.%m, %H:%M')} — {event.end.datetime.strftime('%d.%m, %H:%M')}\n\n"
+    return f"[{event.begin.datetime.replace(tzinfo=utc).strftime('%d.%m')} — 🕦 {event.begin.datetime.replace(tzinfo=utc).strftime('%H:%M')} — {event.end.datetime.replace(tzinfo=utc).strftime('%H:%M')}]\n"
 
 
 def parse_username(calendar_path: str):
@@ -25,7 +25,7 @@ def parse_calendar(calendar_path: str):
         c = ics.Calendar(str(f.read()))
         username = parse_username(calendar_path)
         no_time = True
-        parsed_calendar = f"{username} свободен вот в эти промежутки:\n"
+        parsed_calendar = f"lastmatch © @{username}\n"
         for event in c.events:
             print(event)
             if "lastmatch" in str(event.name).lower():
@@ -65,7 +65,10 @@ def get_schedule(message):
     for root, dirs, files in os.walk(pathlib.Path('..\calendars')):
         for file in files:
             schedules += parse_calendar(os.path.join(root, file))
-    bot.send_message(message.chat.id, schedules)
+    if schedules != "Расписание:\n":
+        bot.send_message(message.chat.id, schedules)
+    else:
+        bot.send_message(message.chat.id, 'Календарей не найдено(')
 
 
 @bot.message_handler(content_types=['document'])
@@ -74,8 +77,17 @@ def process_report(message):
     bot.send_message(message.chat.id, 'Календарь сохранен!')
 
 
+@bot.message_handler(commands=['delete'])
+def delete_calendars(message):
+    for root, dirs, files in os.walk('../calendars'):
+        print(root, files)
+        for file in files:
+            os.remove(os.path.join(root, file))
+    bot.send_message(message.chat.id, 'Календари удалены!')
+
+
 while True:
     try:
         bot.polling()
     except Exception as e:
-        bot.send_message()
+        bot.send_message(231584958, e.args)
