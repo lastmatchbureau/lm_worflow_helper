@@ -6,7 +6,7 @@ import ics
 import codecs
 import datetime
 
-calendars_folder_path = os.path.join(pathlib.Path(__name__), 'calendars')
+calendars_folder_path = os.path.join(pathlib.Path(__name__).parent, 'calendars')
 try:
     os.mkdir(calendars_folder_path)
     print(f"Calendars dir created at: {calendars_folder_path}!")
