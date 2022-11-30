@@ -51,7 +51,7 @@ def download_calendar(message):
             f.write(str(obj.decode(encoding='utf-8')))
             return calendar_path
         except UnicodeDecodeError as e:
-            print(e)
+            bot.send_message(231584958, e.args)
             bot.send_message(message.chat.id, "Ошибка при сохранении календаря.\n"
                                               "Пожалуйста, убедитесь в том, что файл не был поврежден!\n"
                                               "Если нужна помощь, пиши @Olejius")
