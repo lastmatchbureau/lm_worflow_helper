@@ -11,8 +11,10 @@ def event_in_7_days_from_now(event: ics.Event):
     return end_time > datetime_now and begin_time < (datetime_now + datetime.timedelta(days=7))
 
 
-def parse_event(event: ics.Event):
-    return f"[{event.begin.datetime.replace(tzinfo=utc).strftime('%d.%m')} — 🕦 {event.begin.datetime.replace(tzinfo=utc).strftime('%H:%M')} — {event.end.datetime.replace(tzinfo=utc).strftime('%H:%M')}]\n"
+def parse_event(e: ics.Event):
+    e_begin_datetime = e.begin.datetime + datetime.timedelta(hours=3)
+    e_end_datetime = e.end.datetime + datetime.timedelta(hours=3)
+    return f"[{e_begin_datetime.strftime('%d.%m')} — 🕦 {e_begin_datetime.strftime('%H:%M')} — {e_end_datetime.strftime('%H:%M')}]\n"
 
 
 def parse_username(calendar_path: str):
@@ -23,6 +25,7 @@ def parse_calendar(calendar_path: str):
     print(calendar_path)
     with codecs.open(calendar_path, 'r', 'utf-8') as f:
         c = ics.Calendar(str(f.read()))
+        print(c._timezones)
         username = parse_username(calendar_path)
         no_time = True
         parsed_calendar = f"lastmatch © @{username}\n"
@@ -41,7 +44,7 @@ def parse_calendar(calendar_path: str):
 def download_calendar(message):
     obj = bot.get_file(message.document.file_id)
     obj = bot.download_file(obj.file_path)
-    calendar_path = f'../calendars/{message.chat.username}_calendar.ics'
+    calendar_path = f'../calendars/{message.from_user.username}_calendar.ics'
     with open(calendar_path, 'w') as f:
         try:
             f.write(str(obj.decode(encoding='utf-8')))
