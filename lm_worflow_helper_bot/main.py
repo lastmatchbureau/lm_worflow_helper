@@ -95,3 +95,4 @@ while True:
         bot.polling()
     except Exception as e:
         bot.send_message(231584958, str(e.args[0]) + str(e.args[1]))
+        raise e
