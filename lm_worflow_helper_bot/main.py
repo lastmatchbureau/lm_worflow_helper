@@ -49,6 +49,7 @@ def download_calendar(message):
     with open(calendar_path, 'w') as f:
         try:
             f.write(str(obj.decode(encoding='utf-8')))
+            print(f"Calendar from {message.from_user.username} saved at: ", calendar_path)
             return calendar_path
         except UnicodeDecodeError as e:
             bot.send_message(231584958, e.args)

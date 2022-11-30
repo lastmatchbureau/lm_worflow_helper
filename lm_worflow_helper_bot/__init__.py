@@ -4,7 +4,7 @@ import ics
 import codecs
 import datetime
 try:
-    os.mkdir('calendars')
+    os.mkdir('../calendars')
     print("Calendars dir created!")
 except:
     print("Calendars dir existed!")
