@@ -44,7 +44,8 @@ def parse_calendar(calendar_path: str):
 def download_calendar(message):
     obj = bot.get_file(message.document.file_id)
     obj = bot.download_file(obj.file_path)
-    calendar_path = f'../calendars/{message.from_user.username}_calendar.ics'
+    calendar_path = pathlib.Path(f'../calendars/{message.from_user.username}_calendar.ics')
+
     with open(calendar_path, 'w') as f:
         try:
             f.write(str(obj.decode(encoding='utf-8')))
