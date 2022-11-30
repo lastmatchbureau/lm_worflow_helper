@@ -1,5 +1,5 @@
 import pathlib
-from __init__ import codecs, ics, bot, datetime, os
+from __init__ import codecs, ics, bot, datetime, os, calendars_folder_path
 import pytz
 utc=pytz.timezone('Europe/Moscow')
 
@@ -44,7 +44,7 @@ def parse_calendar(calendar_path: str):
 def download_calendar(message):
     obj = bot.get_file(message.document.file_id)
     obj = bot.download_file(obj.file_path)
-    calendar_path = pathlib.Path(f'../calendars/{message.from_user.username}_calendar.ics')
+    calendar_path = pathlib.Path(f'{calendars_folder_path}/{message.from_user.username}_calendar.ics')
 
     with open(calendar_path, 'w') as f:
         try:
@@ -67,7 +67,7 @@ def start(message):
 @bot.message_handler(commands=['get_schedule'])
 def get_schedule(message):
     schedules = "Расписание:\n"
-    for root, dirs, files in os.walk(pathlib.Path('..\calendars')):
+    for root, dirs, files in os.walk(calendars_folder_path):
         for file in files:
             schedules += parse_calendar(os.path.join(root, file))
     if schedules != "Расписание:\n":
@@ -84,7 +84,7 @@ def process_report(message):
 
 @bot.message_handler(commands=['delete'])
 def delete_calendars(message):
-    for root, dirs, files in os.walk('../calendars'):
+    for root, dirs, files in os.walk(calendars_folder_path):
         print(root, files)
         for file in files:
             os.remove(os.path.join(root, file))
@@ -96,4 +96,3 @@ while True:
         bot.polling()
     except Exception as e:
         bot.send_message(231584958, str(e.args[0]) + str(e.args[1]))
-        raise e
