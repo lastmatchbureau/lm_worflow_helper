@@ -1,5 +1,5 @@
 import pathlib
-from lm_worflow_helper_bot import codecs, ics, bot, datetime, os
+from __init__ import codecs, ics, bot, datetime, os
 import pytz
 utc=pytz.timezone('Europe/Moscow')
 
