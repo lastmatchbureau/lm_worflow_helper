@@ -18,19 +18,16 @@ def parse_event(e: ics.Event):
 
 
 def parse_username(calendar_path: str):
-    return calendar_path.replace('_calendar.ics', '').replace('..\\calendars\\', '')
+    return calendar_path.replace('_calendar.ics', '').replace('/calendars/', '')
 
 
 def parse_calendar(calendar_path: str):
-    print(calendar_path)
     with codecs.open(calendar_path, 'r', 'utf-8') as f:
         c = ics.Calendar(str(f.read()))
-        print(c._timezones)
         username = parse_username(calendar_path)
         no_time = True
         parsed_calendar = f"lastmatch © @{username}\n"
         for event in c.events:
-            print(event)
             if "lastmatch" in str(event.name).lower():
                 if event_in_7_days_from_now(event):
                     parsed_calendar += parse_event(event)
