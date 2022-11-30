@@ -18,7 +18,7 @@ def parse_event(e: ics.Event):
 
 
 def parse_username(calendar_path: str):
-    return calendar_path.replace('_calendar.ics', '').replace('/calendars/', '')
+    return calendar_path.replace('_calendar.ics', '').replace('./calendars/', '')
 
 
 def parse_calendar(calendar_path: str):
