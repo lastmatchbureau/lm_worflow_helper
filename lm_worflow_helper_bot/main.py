@@ -46,7 +46,7 @@ def download_calendar(message):
     with open(calendar_path, 'w') as f:
         try:
             f.write(str(obj.decode(encoding='utf-8')))
-            print(f"Calendar from {message.from_user.username} saved at: ", calendar_path)
+            #print(f"Calendar from {message.from_user.username} saved at: ", calendar_path)
             return calendar_path
         except UnicodeDecodeError as e:
             bot.send_message(231584958, e.args)
@@ -82,7 +82,7 @@ def process_report(message):
 @bot.message_handler(commands=['delete'])
 def delete_calendars(message):
     for root, dirs, files in os.walk(calendars_folder_path):
-        print(root, files)
+        #print(root, files)
         for file in files:
             os.remove(os.path.join(root, file))
     bot.send_message(message.chat.id, 'Календари удалены!')
