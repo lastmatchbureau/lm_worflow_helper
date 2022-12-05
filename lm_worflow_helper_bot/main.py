@@ -54,6 +54,9 @@ def download_calendar(message):
                 bot.send_message(message.chat.id, "Ошибка при сохранении календаря.\n"
                                                   "Пожалуйста, убедитесь в том, что файл не был поврежден!\n"
                                                   "Если нужна помощь, пиши @Olejius")
+    else:
+        return None
+
 
 
 @bot.message_handler(commands=['start'])
@@ -77,7 +80,8 @@ def get_schedule(message):
 @bot.message_handler(content_types=['document'])
 def process_report(message):
     calendar_path = download_calendar(message)
-    bot.send_message(message.chat.id, 'Календарь сохранен!')
+    if calendar_path is not None:
+        bot.send_message(message.chat.id, 'Календарь сохранен!')
 
 
 @bot.message_handler(commands=['delete'])
