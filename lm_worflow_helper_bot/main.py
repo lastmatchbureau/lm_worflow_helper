@@ -40,19 +40,20 @@ def parse_calendar(calendar_path: str):
 
 def download_calendar(message):
     obj = bot.get_file(message.document.file_id)
-    obj = bot.download_file(obj.file_path)
-    calendar_path = pathlib.Path(f'{calendars_folder_path}/{message.from_user.username}_calendar.ics')
+    if '.ics' == obj.file_path[-4::]:
+        obj = bot.download_file(obj.file_path)
+        calendar_path = pathlib.Path(f'{calendars_folder_path}/{message.from_user.username}_calendar.ics')
 
-    with open(calendar_path, 'w') as f:
-        try:
-            f.write(str(obj.decode(encoding='utf-8')))
-            #print(f"Calendar from {message.from_user.username} saved at: ", calendar_path)
-            return calendar_path
-        except UnicodeDecodeError as e:
-            bot.send_message(231584958, e.args)
-            bot.send_message(message.chat.id, "Ошибка при сохранении календаря.\n"
-                                              "Пожалуйста, убедитесь в том, что файл не был поврежден!\n"
-                                              "Если нужна помощь, пиши @Olejius")
+        with open(calendar_path, 'w') as f:
+            try:
+                f.write(str(obj.decode(encoding='utf-8')))
+                #print(f"Calendar from {message.from_user.username} saved at: ", calendar_path)
+                return calendar_path
+            except UnicodeDecodeError as e:
+                bot.send_message(231584958, e.args)
+                bot.send_message(message.chat.id, "Ошибка при сохранении календаря.\n"
+                                                  "Пожалуйста, убедитесь в том, что файл не был поврежден!\n"
+                                                  "Если нужна помощь, пиши @Olejius")
 
 
 @bot.message_handler(commands=['start'])
