@@ -1,0 +1,6 @@
+cd lm_workflow_helper
+git pull origin master
+echo -e "Activating a virtual environment..."
+. venv/bin/activate
+echo -e "Press ENTER to run main.py..."
+python3.9 main.py &

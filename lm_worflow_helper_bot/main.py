@@ -1,7 +1,15 @@
-import pathlib
-from __init__ import codecs, ics, bot, datetime, os, calendars_folder_path
-import pytz
-utc=pytz.timezone('Europe/Moscow')
+from __init__ import codecs, ics, bot, datetime, os, calendars_folder_path, pathlib, pytz, logger, types, ADMIN_USERS
+
+utc = pytz.timezone('Europe/Moscow')
+
+
+def admin_only(func):
+    def wrapped(message: types.Message):
+        if message.from_user.username in ADMIN_USERS:
+            func(message)
+        else:
+            bot.send_message(message.chat.id, 'Команда доступна только админам!')
+    return wrapped
 
 
 def event_in_7_days_from_now(event: ics.Event):
@@ -11,9 +19,9 @@ def event_in_7_days_from_now(event: ics.Event):
     return end_time > datetime_now and begin_time < (datetime_now + datetime.timedelta(days=7))
 
 
-def parse_event(e: ics.Event):
-    e_begin_datetime = e.begin.datetime + datetime.timedelta(hours=3)
-    e_end_datetime = e.end.datetime + datetime.timedelta(hours=3)
+def parse_event(event: ics.Event):
+    e_begin_datetime = event.begin.datetime + datetime.timedelta(hours=3)
+    e_end_datetime = event.end.datetime + datetime.timedelta(hours=3)
     return f"[{e_begin_datetime.strftime('%d.%m')} — 🕦 {e_begin_datetime.strftime('%H:%M')} — {e_end_datetime.strftime('%H:%M')}]\n"
 
 
@@ -38,7 +46,7 @@ def parse_calendar(calendar_path: str):
             return parsed_calendar
 
 
-def download_calendar(message):
+def download_calendar(message: types.Message):
     obj = bot.get_file(message.document.file_id)
     if '.ics' == obj.file_path[-4::]:
         obj = bot.download_file(obj.file_path)
@@ -47,7 +55,7 @@ def download_calendar(message):
         with open(calendar_path, 'w') as f:
             try:
                 f.write(str(obj.decode(encoding='utf-8')))
-                #print(f"Calendar from {message.from_user.username} saved at: ", calendar_path)
+                logger.debug(f"Calendar from {message.from_user.username} saved at: {calendar_path}")
                 return calendar_path
             except UnicodeDecodeError as e:
                 bot.send_message(231584958, e.args)
@@ -58,15 +66,14 @@ def download_calendar(message):
         return None
 
 
-
 @bot.message_handler(commands=['start'])
-def start(message):
+def start(message: types.Message):
     bot.send_message(message.chat.id, "Отправь файл календаря с расширением .ics, "
                                       "например из https://calendar.google.com/")
 
 
 @bot.message_handler(commands=['get_schedule'])
-def get_schedule(message):
+def get_schedule(message: types.Message):
     schedules = "Расписание:\n"
     for root, dirs, files in os.walk(calendars_folder_path):
         for file in files:
@@ -78,23 +85,28 @@ def get_schedule(message):
 
 
 @bot.message_handler(content_types=['document'])
-def process_report(message):
+def process_report(message: types.Message):
     calendar_path = download_calendar(message)
     if calendar_path is not None:
         bot.send_message(message.chat.id, 'Календарь сохранен!')
+        if calendar_path: logger.debug(str(calendar_path) + " -- CALENDAR SAVED!")
 
 
 @bot.message_handler(commands=['delete'])
-def delete_calendars(message):
-    for root, dirs, files in os.walk(calendars_folder_path):
-        #print(root, files)
-        for file in files:
-            os.remove(os.path.join(root, file))
-    bot.send_message(message.chat.id, 'Календари удалены!')
+@admin_only
+def delete_calendars(message: types.Message):
+    if message.from_user.username in ADMIN_USERS:
+        for root, dirs, files in os.walk(calendars_folder_path):
+            for file in files:
+                os.remove(os.path.join(root, file))
+                logger.debug(os.path.join(root, file) + "-- DELETED!")
+        bot.send_message(message.chat.id, 'Календари удалены!')
 
 
 while True:
     try:
         bot.polling()
     except Exception as e:
+        logger.debug("ERROR!" + str(e.args[0]) + str(e.args[1]))
         bot.send_message(231584958, str(e.args[0]) + str(e.args[1]))
+        bot.send_document(231584958, open('debug.log', 'rb'))
