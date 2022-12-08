@@ -23,16 +23,31 @@ def admin_only(func):
     return wrapped
 
 
+def add_zero(time_particle: int) -> str:
+    if len(str(time_particle)) == 1:
+        return '0' + str(time_particle)
+    else:
+        return str(time_particle)
+
+
+def parse_delta(start_t: datetime.datetime, end_t: datetime.datetime):
+    hours = add_zero((end_t - start_t).seconds // 3600)
+    minutes = add_zero((end_t - start_t).seconds % 3600 // 60)
+    seconds = add_zero((end_t - start_t).seconds % 3600 % 60)
+    return f"{hours}:{minutes}:{seconds}"
+
+
 def parse_tracking_message(callback: types.CallbackQuery):
     unix_start_time = int(callback.data.split("_")[2])
     start_t = datetime.datetime.fromtimestamp(unix_start_time) + datetime.timedelta(hours=3)
     end_t = datetime.datetime.now() + datetime.timedelta(hours=3)
     logger.debug(f'Start time for {callback.from_user.username}:' + start_t.time().__str__() +
                  f'\nEnd time for {callback.from_user.username}:' + end_t.time().__str__())
+    delta = parse_delta(start_t, end_t)
     return f"Отсчёт времени завершен!\n" \
            f"lastmatch © @{callback.from_user.username}\n" \
            f"[🕦 {start_t.strftime('%H:%M')} — {end_t.strftime('%H:%M')}]\n" \
-           f"[🕦 Прошло — {(end_t - start_t)}]"
+           f"[🕦 Прошло — {delta}]"
 
 
 @bot.message_handler(commands=['start'])
