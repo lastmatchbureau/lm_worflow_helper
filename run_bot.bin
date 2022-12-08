@@ -1,6 +1,6 @@
-cd lm_workflow_helper_bot
-git pull origin master
+cd ./lm_workflow_helper_bot/
+sudo git pull origin master
 echo -e "Activating a virtual environment..."
-. venv/bin/activate
+. ../venv/bin/activate
 echo -e "Press ENTER to run main.py..."
 python3.10 main.py &

@@ -1,6 +1,16 @@
-from __init__ import codecs, ics, bot, datetime, os, calendars_folder_path, pathlib, pytz, logger, types, ADMIN_USERS
+from calendar_processor import \
+    CalendarProcessor, \
+    types, \
+    ADMIN_USERS, \
+    bot, \
+    calendars_folder_path, \
+    os, \
+    logger, \
+    ADMIN_TG_ID, \
+    datetime
+from keyboards import tracking_keyboard_generator, end_tracking_keyboard_generator
 
-utc = pytz.timezone('Europe/Moscow')
+cp = CalendarProcessor()
 
 
 def admin_only(func):
@@ -12,58 +22,15 @@ def admin_only(func):
     return wrapped
 
 
-def event_in_7_days_from_now(event: ics.Event):
-    datetime_now = datetime.datetime.now().replace(tzinfo=utc)
-    begin_time = event.begin.datetime.replace(tzinfo=utc)
-    end_time = event.end.datetime.replace(tzinfo=utc)
-    return end_time > datetime_now and begin_time < (datetime_now + datetime.timedelta(days=7))
-
-
-def parse_event(event: ics.Event):
-    e_begin_datetime = event.begin.datetime + datetime.timedelta(hours=3)
-    e_end_datetime = event.end.datetime + datetime.timedelta(hours=3)
-    return f"[{e_begin_datetime.strftime('%d.%m')} — 🕦 {e_begin_datetime.strftime('%H:%M')} — {e_end_datetime.strftime('%H:%M')}]\n"
-
-
-def parse_username(calendar_path: str):
-    return calendar_path.replace('_calendar.ics', '').replace('./calendars/', '').replace('.\\calendars\\', '')
-
-
-def parse_calendar(calendar_path: str):
-    with codecs.open(calendar_path, 'r', 'utf-8') as f:
-        c = ics.Calendar(str(f.read()))
-        username = parse_username(calendar_path)
-        no_time = True
-        parsed_calendar = f"lastmatch © @{username}\n"
-        for event in sorted(c.events, key=lambda event: event.begin.datetime):
-            if "lastmatch" in str(event.name).lower():
-                if event_in_7_days_from_now(event):
-                    parsed_calendar += parse_event(event)
-                    no_time = False
-        if no_time:
-            return f"В ближайшую неделю {username} занят.\n\n"
-        else:
-            return parsed_calendar
-
-
-def download_calendar(message: types.Message):
-    obj = bot.get_file(message.document.file_id)
-    if '.ics' == obj.file_path[-4::]:
-        obj = bot.download_file(obj.file_path)
-        calendar_path = pathlib.Path(f'{calendars_folder_path}/{message.from_user.username}_calendar.ics')
-
-        with open(calendar_path, 'w') as f:
-            try:
-                f.write(str(obj.decode(encoding='utf-8')))
-                logger.debug(f"Calendar from {message.from_user.username} saved at: {calendar_path}")
-                return calendar_path
-            except UnicodeDecodeError as e:
-                bot.send_message(231584958, e.args)
-                bot.send_message(message.chat.id, "Ошибка при сохранении календаря.\n"
-                                                  "Пожалуйста, убедитесь в том, что файл не был поврежден!\n"
-                                                  "Если нужна помощь, пиши @Olejius")
-    else:
-        return None
+def parse_tracking_message(callback: types.CallbackQuery):
+    unix_start_time = int(callback.data.split("_")[2])
+    start_t = datetime.datetime.fromtimestamp(unix_start_time)
+    end_t = datetime.datetime.fromtimestamp(callback.message.date)
+    logger.debug(f"{callback.data} {start_t.time()} {end_t.time()}")
+    return f"Отсчёт времени завершен!\n" \
+           f"lastmatch © @{callback.from_user.username}\n" \
+           f"[🕦 {start_t.strftime('%H:%M')} — {end_t.strftime('%H:%M')}]\n" \
+           f"[🕦 Прошло — {(end_t - start_t)}]"
 
 
 @bot.message_handler(commands=['start'])
@@ -77,7 +44,7 @@ def get_schedule(message: types.Message):
     schedules = "Расписание:\n"
     for root, dirs, files in os.walk(calendars_folder_path):
         for file in files:
-            schedules += parse_calendar(os.path.join(root, file))
+            schedules += cp.parse_calendar(os.path.join(root, file))
     if schedules != "Расписание:\n":
         bot.send_message(message.chat.id, schedules)
     else:
@@ -86,10 +53,15 @@ def get_schedule(message: types.Message):
 
 @bot.message_handler(content_types=['document'])
 def process_report(message: types.Message):
-    calendar_path = download_calendar(message)
+    calendar_path = cp.download_calendar(message)
     if calendar_path is not None:
         bot.send_message(message.chat.id, 'Календарь сохранен!')
         if calendar_path: logger.debug(str(calendar_path) + " -- CALENDAR SAVED!")
+
+
+@bot.message_handler(commands=['track_time'])
+def track_time(message: types.Message):
+    bot.send_message(message.chat.id, "Трекинг времени", reply_markup=tracking_keyboard_generator(message))
 
 
 @bot.message_handler(commands=['delete'])
@@ -103,10 +75,23 @@ def delete_calendars(message: types.Message):
         bot.send_message(message.chat.id, 'Календари удалены!')
 
 
+@bot.callback_query_handler(lambda callback: 'begin' in callback.data)
+def begin_tracking(callback: types.CallbackQuery):
+    bot.reply_to(callback.message, 'Время пошло!\nЧтобы завершить отсчёт времени жми кнопку:',
+                     reply_markup=end_tracking_keyboard_generator(callback))
+    return True
+
+
+@bot.callback_query_handler(lambda callback: 'end' in callback.data and str(callback.from_user.id) in callback.data)
+def end_tracking(callback: types.CallbackQuery):
+    bot.send_message(callback.from_user.id, parse_tracking_message(callback))
+    return True
+
+
 while True:
     try:
         bot.polling()
     except Exception as e:
-        logger.debug("ERROR!" + str(e.args[0]) + str(e.args[1]))
-        bot.send_message(231584958, str(e.args[0]) + str(e.args[1]))
-        bot.send_document(231584958, open('debug.log', 'rb'))
+        logger.debug("ERROR! " + str(e))
+        bot.send_message(ADMIN_TG_ID, str(e))
+        bot.send_document(ADMIN_TG_ID, open('debug.log', 'rb'))

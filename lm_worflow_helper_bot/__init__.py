@@ -1,11 +1,8 @@
 import os
 import pathlib
-import pytz
 from telebot import TeleBot, types
-import ics
-import codecs
-import datetime
 from loguru import logger
+import sqlite3
 
 logger.add('debug.log', format="{time} {level} {message}", level="DEBUG", rotation='10 KB', compression='zip')
 
@@ -20,6 +17,8 @@ except:
     logger.debug("Calendars dir existed!")
 
 
-os.environ['TG_API_BOT'] = '5825095498:AAFUbxz_7cexnzCvzJl-F3-3J7JF2ARKSdA'
+os.environ['TG_API_BOT'] = '5851418035:AAGJohY7SJAFz0ixwca8GdklzqlDoX0p0yA'
 bot = TeleBot(os.environ['TG_API_BOT'])
 logger.debug("TeleBot is online!\n")
+
+ADMIN_TG_ID = 231584958
