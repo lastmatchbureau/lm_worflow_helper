@@ -17,7 +17,7 @@ except:
     logger.debug("Calendars dir existed!")
 
 
-os.environ['TG_API_BOT'] = '5851418035:AAGJohY7SJAFz0ixwca8GdklzqlDoX0p0yA'
+os.environ['TG_API_BOT'] = '5825095498:AAFUbxz_7cexnzCvzJl-F3-3J7JF2ARKSdA'
 bot = TeleBot(os.environ['TG_API_BOT'])
 logger.debug("TeleBot is online!\n")
 

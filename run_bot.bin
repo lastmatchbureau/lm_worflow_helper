@@ -1,4 +1,4 @@
-cd ./lm_workflow_helper_bot/
+cd lm_workflow_helper_bot/
 sudo git pull origin master
 echo -e "Activating a virtual environment..."
 . ../venv/bin/activate
