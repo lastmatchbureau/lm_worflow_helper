@@ -19,6 +19,7 @@ def admin_only(func):
             func(message)
         else:
             bot.send_message(message.chat.id, 'Команда доступна только админам!')
+
     return wrapped
 
 
@@ -26,7 +27,10 @@ def parse_tracking_message(callback: types.CallbackQuery):
     unix_start_time = int(callback.data.split("_")[2])
     start_t = datetime.datetime.fromtimestamp(unix_start_time) + datetime.timedelta(hours=3)
     end_t = datetime.datetime.fromtimestamp(callback.message.date) + datetime.timedelta(hours=3)
-    logger.debug(f"{callback.data} {start_t.time()} {end_t.time()}")
+    logger.debug(f'Start time for {callback.from_user.username}:' + datetime.datetime.fromtimestamp(
+        callback.message.date).time().__str__() +
+                 f'\nEnd time for {callback.from_user.username}:' + datetime.datetime.fromtimestamp(
+        callback.message.date).time().__str__())
     return f"Отсчёт времени завершен!\n" \
            f"lastmatch © @{callback.from_user.username}\n" \
            f"[🕦 {start_t.strftime('%H:%M')} — {end_t.strftime('%H:%M')}]\n" \
@@ -78,7 +82,7 @@ def delete_calendars(message: types.Message):
 @bot.callback_query_handler(lambda callback: 'begin' in callback.data)
 def begin_tracking(callback: types.CallbackQuery):
     bot.reply_to(callback.message, 'Время пошло!\nЧтобы завершить отсчёт времени жми кнопку:',
-                     reply_markup=end_tracking_keyboard_generator(callback))
+                 reply_markup=end_tracking_keyboard_generator(callback))
     return True
 
 
