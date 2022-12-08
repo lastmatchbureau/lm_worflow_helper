@@ -26,11 +26,9 @@ def admin_only(func):
 def parse_tracking_message(callback: types.CallbackQuery):
     unix_start_time = int(callback.data.split("_")[2])
     start_t = datetime.datetime.fromtimestamp(unix_start_time) + datetime.timedelta(hours=3)
-    end_t = datetime.datetime.fromtimestamp(callback.message.date) + datetime.timedelta(hours=3)
-    logger.debug(f'Start time for {callback.from_user.username}:' + datetime.datetime.fromtimestamp(
-        callback.message.date).time().__str__() +
-                 f'\nEnd time for {callback.from_user.username}:' + datetime.datetime.fromtimestamp(
-        callback.message.date).time().__str__())
+    end_t = datetime.datetime.now() + datetime.timedelta(hours=3)
+    logger.debug(f'Start time for {callback.from_user.username}:' + start_t.time().__str__() +
+                 f'\nEnd time for {callback.from_user.username}:' + end_t.time().__str__())
     return f"Отсчёт времени завершен!\n" \
            f"lastmatch © @{callback.from_user.username}\n" \
            f"[🕦 {start_t.strftime('%H:%M')} — {end_t.strftime('%H:%M')}]\n" \
