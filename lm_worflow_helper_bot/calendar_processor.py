@@ -33,6 +33,8 @@ class CalendarProcessor:
                     if self.event_in_7_days_from_now(event):
                         parsed_calendar += self.parse_event(event)
                         no_time = False
+            if c.events is [] and no_time:
+                return f"{username} не отправлял расписание на неделю.\n\n"
             if no_time:
                 return f"В ближайшую неделю {username} занят.\n\n"
             else:
